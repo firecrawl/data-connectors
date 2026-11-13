@@ -30,15 +30,7 @@ export interface OneDriveOptions
 export class OneDriveDataProvider
   implements DataProvider<OneDriveOptions>
 {
-  private nango: Nango;
   private accessToken: string = "";
-
-  constructor() {
-    if (!process.env.NANGO_SECRET_KEY) {
-      throw new Error("Nango secret key is required");
-    }
-    this.nango = new Nango({ secretKey: process.env.NANGO_SECRET_KEY });
-  }
 
   async downloadFile(itemId: string, destPath: string): Promise<string> {
     const dest = fs.createWriteStream(destPath);
@@ -81,7 +73,11 @@ export class OneDriveDataProvider
     authorizeOptions: NangoAuthorizationOptions
   ): Promise<void> {
     try {
-      const connection = await this.nango.getConnection(
+      if (!process.env.NANGO_SECRET_KEY) {
+        throw new Error("Nango secret key is required");
+      }
+      const nango = new Nango({ secretKey: process.env.NANGO_SECRET_KEY });
+      const connection = await nango.getConnection(
         authorizeOptions.nango_integration_id || "one-drive",
         authorizeOptions.nango_connection_id
       );

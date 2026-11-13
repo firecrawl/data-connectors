@@ -34,16 +34,8 @@ export class GoogleDriveDataProvider
   private using_nango: boolean = false;
   private nango_integration_id: string = "google-drive";
   private nango_connection_id: string = "";
-  private nango: Nango;
   private access_token: string = "";
   private filesIds: string[] = [];
-
-  constructor() {
-    if (!process.env.NANGO_SECRET_KEY) {
-      throw new Error("Nango secret key is required");
-    }
-    this.nango = new Nango({ secretKey: process.env.NANGO_SECRET_KEY });
-  }
 
   async downloadFile(fileId: string, destPath: string): Promise<string> {
     const dest = fs.createWriteStream(destPath);
@@ -114,7 +106,11 @@ export class GoogleDriveDataProvider
     authorizeOptions: NangoAuthorizationOptions
   ): Promise<void> {
     try {
-      const connection = await this.nango.getConnection(
+      if (!process.env.NANGO_SECRET_KEY) {
+        throw new Error("Nango secret key is required");
+      }
+      const nango = new Nango({ secretKey: process.env.NANGO_SECRET_KEY });
+      const connection = await nango.getConnection(
         authorizeOptions.nango_integration_id || this.nango_integration_id,
         authorizeOptions.nango_connection_id
       );
