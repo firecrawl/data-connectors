@@ -6,6 +6,25 @@ import { batchProcess } from "../../utils/batchProcess";
 import { getLinksFromSitemap } from "./sitemap";
 import { WebCrawler } from "./crawler";
 
+const SITEMAP_FILE_NAME = "sitemap.xml";
+
+function resolveSitemapUrl(url: string): string {
+  const trimmedUrl = url.trim();
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(trimmedUrl);
+  } catch (error) {
+    return trimmedUrl;
+  }
+  if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+    return trimmedUrl;
+  }
+  if (parsedUrl.pathname !== "/" && parsedUrl.pathname !== "") {
+    return trimmedUrl;
+  }
+  return new URL(SITEMAP_FILE_NAME, `${parsedUrl.origin}/`).toString();
+}
+
 export type WebScraperOptions = {
   urls: string[];
   mode: "single_urls" | "sitemap" | "crawl";
@@ -93,7 +112,7 @@ export class WebScraperDataProvider implements DataProvider<WebScraperOptions> {
       return this.convertUrlsToDocuments(this.urls, inProgress);
     }
     if (this.mode === "sitemap") {
-      const links = await getLinksFromSitemap(this.urls[0]);
+      const links = await getLinksFromSitemap(resolveSitemapUrl(this.urls[0]));
       console.log(`Found ${links.length} urls in sitemap`);
       return this.convertUrlsToDocuments(links.slice(0, this.limit), inProgress);
     }
