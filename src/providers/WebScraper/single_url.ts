@@ -16,7 +16,7 @@ async function scrapWithScrapingBee(url: string): Promise<string | null> {
     });
 
     if (response.status !== 200 && response.status !== 404) {
-      console.error(
+      console.warn(
         `Scraping bee error in ${url} with status code ${response.status}`
       );
       return null;
@@ -25,7 +25,7 @@ async function scrapWithScrapingBee(url: string): Promise<string | null> {
     const text = decoder.decode(response.data);
     return text;
   } catch (error) {
-    console.error(`Error scraping with Scraping Bee: ${error}`);
+    console.warn(`Error scraping with Scraping Bee: ${error}`);
     return null;
   }
 }
@@ -34,9 +34,11 @@ export async function scrapSingleUrl(urlToScrap: string, toMarkdown: boolean = t
   urlToScrap = urlToScrap.trim();
 
   try {
-    let content = await scrapWithScrapingBee(urlToScrap);
-  
-  
+    let content: string | null = null;
+
+    if (process.env.SCRAPING_BEE_API_KEY) {
+      content = await scrapWithScrapingBee(urlToScrap);
+    }
 
     if (!content) {
       const res = await attemptScrapWithRequests(urlToScrap);
